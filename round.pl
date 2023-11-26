@@ -6,71 +6,64 @@
 :- consult('strategy.pl').
 :- consult('utilities.pl').
 
-% % play_round - Executes a round of the game and returns the scores
-% play_round(Board, CurrentPlayer, Symbol, HumanCaptures, ComputerCaptures, Scores) :-
-%     make_move(Board, CurrentPlayer, Symbol, NewBoard, LastMove),
-%     print_board(NewBoard),
-%     % check_for_capture(NewBoard, Symbol, LastMove, CaptureResult, NewBoardWithCaptures),
-%     % update_captures(CurrentPlayer, CaptureResult, HumanCaptures, ComputerCaptures, NewHumanCaptures, NewComputerCaptures),
-%     (   check_win(NewBoardWithCaptures, LastMove, Symbol, NewHumanCaptures, NewComputerCaptures, Winner) ->
-%         count_four_in_a_row_points(NewBoardWithCaptures, CurrentPlayer, Symbol, FourInARowPoints),
-%         count_total_points(Winner, CurrentPlayer, NewHumanCaptures, NewComputerCaptures, FourInARowPoints, Scores)
-%     ;   ask_user_continue(Choice),
-%         (   Choice == continue ->
-%             get_opponent_player(CurrentPlayer, NextPlayer),
-%             get_opponent_symbol(Symbol, NextSymbol),
-%             play_round(NewBoardWithCaptures, NextPlayer, NextSymbol, NewHumanCaptures, NewComputerCaptures, Scores)
-%         ;   Choice == save ->
-%             save_game_to_file(NewBoardWithCaptures, NewHumanCaptures, NewComputerCaptures, CurrentPlayer, Symbol),
-%             Scores = [NewHumanCaptures, NewComputerCaptures]
-%         ;   Choice == quit ->
-%             writeln('Game ended without saving.'),
-%             Scores = [NewHumanCaptures, NewComputerCaptures]
-%         )
-%     ).
 
     play_round(Board, CurrentPlayer, Symbol, HumanCaptures, ComputerCaptures, Scores) :-
-        print_board(Board),
-        format('Player ~w (~w)~n', [CurrentPlayer, Symbol]),
-        make_move(Board, CurrentPlayer, Symbol, NewBoard, LastMove),
-        print_board(NewBoard),
 
-        % check_for_capture(NewBoard, Symbol, LastMove, CaptureResult, NewBoardWithCaptures),
-        % update_captures(CurrentPlayer, CaptureResult, HumanCaptures, ComputerCaptures, NewHumanCaptures, NewComputerCaptures),
-        % (   check_win(NewBoardWithCaptures, LastMove, Symbol, NewHumanCaptures, NewComputerCaptures, Winner) ->
-        %     count_four_in_a_row_points(NewBoardWithCaptures, CurrentPlayer, Symbol, FourInARowPoints),
-        %     count_total_points(Winner, CurrentPlayer, NewHumanCaptures, NewComputerCaptures, FourInARowPoints, Scores)
-        % ;
-        ask_user_continue(Choice),
-        (   Choice == continue ->
-            get_opponent_player(CurrentPlayer, NextPlayer),
-            get_opponent_symbol(Symbol, NextSymbol),
-            play_round(NewBoard, NextPlayer, NextSymbol, HumanCaptures, ComputerCaptures, Scores)
-        ;   Choice == save ->
-            save_game_to_file(NewBoard, HumanCaptures, ComputerCaptures, CurrentPlayer, Symbol),
-            Scores = [HumanCaptures, ComputerCaptures]
-        ;   Choice == quit ->
-            writeln('Game ended without saving.'),
-            Scores = [HumanCaptures, ComputerCaptures]
+        make_move(CurrentPlayer, Board,  Symbol, NewBoard, LastMove),
+        check_for_capture(NewBoard, Symbol, LastMove, NewBoardWithCaptures, NumCaptures),
+        update_captures(CurrentPlayer, HumanCaptures, ComputerCaptures, NumCaptures, NewHumanCaptures, NewComputerCaptures),
+        print_board(NewBoardWithCaptures),
+        print_captures(NewHumanCaptures, NewComputerCaptures),
+        
+        (   check_win(NewBoardWithCaptures, LastMove, Symbol, NumCaptures) ->
+            % win condition
+            determine_winner_type(NewBoardWithCaptures, LastMove, Symbol, NumCaptures, WinnerType), 
+            format("~w wins this round! Reason code: ~w\n", [CurrentPlayer, WinnerType]),
+            count_four_in_a_row_points(NewBoardWithCaptures, CurrentPlayer, Symbol, FourInARowPoints),
+            count_total_points(WinnerType, CurrentPlayer, NewHumanCaptures, NewComputerCaptures, FourInARowPoints, Scores)
+        ; %no winner condition
+            ask_user_continue(Choice),
+            (   Choice == continue ->
+                get_opponent_player(CurrentPlayer, NextPlayer),
+                get_opponent_symbol(Symbol, NextSymbol),
+                play_round(NewBoardWithCaptures, NextPlayer, NextSymbol, HumanCaptures, ComputerCaptures, Scores)
+            ;   Choice == save ->
+                save_game_to_file(NewBoardWithCaptures, HumanCaptures, ComputerCaptures, CurrentPlayer, Symbol),
+                Scores = [HumanCaptures, ComputerCaptures]
+            ;   Choice == quit ->
+                writeln('Game ended without saving.'),
+                Scores = [HumanCaptures, ComputerCaptures]
+            )
         ).
     
 
 
-make_move(Board, human, Symbol, NewBoard, LastMove) :-
+make_move(human,Board,  Symbol, NewBoard, LastMove) :-
     human_play(Board, Symbol, NewBoard, LastMove).
 
-make_move(Board, computer, Symbol, NewBoard, LastMove) :-
+make_move(computer, Board, Symbol, NewBoard, LastMove) :-
     computer_play(Board, Symbol, NewBoard, LastMove).
 
-% make_move(Board, _, _, Board, []).
+update_captures(human, HumanCaptures, ComputerCaptures, NumCaptures, NewHumanCaptures, ComputerCaptures) :-
+    NewHumanCaptures is HumanCaptures + NumCaptures.
 
+update_captures(computer, HumanCaptures, ComputerCaptures, NumCaptures, HumanCaptures, NewComputerCaptures) :-
+    NewComputerCaptures is ComputerCaptures + NumCaptures.
+
+print_captures(HumanCaptures, ComputerCaptures) :-
+    format('Human Captures: ~d\tComputer Captures: ~d~n', [HumanCaptures, ComputerCaptures]).
+    
 % Determines if the current player has won
-check_win(Board, LastMove, Symbol, HumanCaptures, ComputerCaptures, Winner) :-
-    (   check_for_five_in_a_row(Board, Symbol, LastMove) -> Winner = row5
-    ;   (   Symbol == 'W', HumanCaptures >= 5
-        ;   Symbol == 'B', ComputerCaptures >= 5
-        ) -> Winner = capture5
-    ;   Winner = none
+check_win(Board, LastMove, Symbol, NumCaptures) :-
+    (   check_for_five_in_a_row(Board, Symbol, LastMove)
+    ;   NumCaptures >= 5
+    ).
+
+determine_winner_type(Board, LastMove, Symbol, NumCaptures, WinnerType) :-
+    (   check_for_five_in_a_row(Board, Symbol, LastMove) -> 
+        WinnerType = row5
+    ;   NumCaptures >= 5 -> 
+        WinnerType = capture5
     ).
 
 
