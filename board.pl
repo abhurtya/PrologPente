@@ -128,7 +128,7 @@ check_row(Row, Symbol, Count) :-
     include(=(Symbol), Row, Filtered),
     length(Filtered, Count).
 
-% Count the number of consecutive stones in a specified direction
+% Count the number of consecutive stones in a specified direction excluding the current cell
 count_consecutive_stones(Board, X, Y, Dx, Dy, Symbol, Depth, Count) :-
     NewX is X + Dx,
     NewY is Y + Dy,

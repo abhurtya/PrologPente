@@ -81,20 +81,23 @@ count_four_in_a_row_points(_, _, _, [0, 0]). % Default case
 
 %points
 
-count_total_points(Winner, CurrentPlayer, HumanCaptures, ComputerCaptures, FourInARowPoints, Scores) :-
-    (   Winner \= none ->
-        % Assign row 5 win bonus points to the winner
-        WinPoints is 4,
-        (   CurrentPlayer == human ->
-            HumanPoints is HumanCaptures + WinPoints + FourInARowPoints,
-            ComputerPoints = ComputerCaptures
-        ;   ComputerPoints is ComputerCaptures + WinPoints + FourInARowPoints,
-            HumanPoints = HumanCaptures
-        )
-    ;   HumanPoints = HumanCaptures,
-        ComputerPoints = ComputerCaptures
-    ),
-    Scores = [HumanPoints, ComputerPoints].
+win_bonus(row5, 4).
+win_bonus(_, 0).
+
+count_total_points(WinType, CurrentPlayer, HumanCaptures, ComputerCaptures, [FourInARowHuman, FourInARowComputer], [HumanPoints, ComputerPoints]) :-
+    win_bonus(WinType, WinBonus),
+    calculate_player_points(CurrentPlayer, WinBonus, HumanCaptures, ComputerCaptures, FourInARowHuman, FourInARowComputer, HumanPoints, ComputerPoints).
+
+win_bonus(row5, 4).
+win_bonus(_, 0).
+
+calculate_player_points(human, WinBonus, HumanCaptures, ComputerCaptures, FourInARowHuman, FourInARowComputer, HumanPoints, ComputerPoints) :-
+    HumanPoints is HumanCaptures + WinBonus + FourInARowHuman,
+    ComputerPoints is ComputerCaptures + FourInARowComputer.
+
+calculate_player_points(computer, WinBonus, HumanCaptures, ComputerCaptures, FourInARowHuman, FourInARowComputer, HumanPoints, ComputerPoints) :-
+    HumanPoints is HumanCaptures + FourInARowHuman,
+    ComputerPoints is ComputerCaptures + WinBonus + FourInARowComputer.
 
 % save_game_to_file - Saves the current game state to a file
 

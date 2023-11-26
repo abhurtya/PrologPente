@@ -30,24 +30,7 @@ index_to_grid(Row, Col, Grid) :-
     atom_number(NumAtom, Number),
     atom_concat(Char, NumAtom, Grid).
 
-% Check if there are n consecutive occurrences of a given symbol from a starting cell in all directions.
-check_for_n_in_a_row(Board, Symbol, N, Count) :-
-    check_cell_for_n(Board, Symbol, 0, 0, N, Count).
 
-% Helper function to check for n-in-a-row occurrences of a given symbol starting from the specified cell in all directions.
-check_cell_for_n(_, _, 19, _, _, 0).
-
-check_cell_for_n(Board, Symbol, X, 19, N, Count) :-
-    NewX is X + 1,
-    check_cell_for_n(Board, Symbol, NewX, 0, N, Count).
-
-
-check_cell_for_n(Board, Symbol, X, Y, N, Count) :-
-    directions(Directions),
-    check_directions_for_n(Board, Symbol, X, Y, Directions, N, DirectionCount),
-    NewY is Y + 1,
-    check_cell_for_n(Board, Symbol, X, NewY, N, NextCount),
-    Count is DirectionCount + NextCount.
 
 % Define the four primary directions for checking.
 directions(Directions) :-
@@ -56,18 +39,6 @@ directions(Directions) :-
 capture_directions(Directions) :-
     Directions = [[1, 0], [0, 1], [1, 1], [1, -1], [-1, 0], [0, -1], [-1, -1], [-1, 1]].
 
-% Check all directions for n consecutive stones.
-check_directions_for_n(_, _, _, _, [], _, 0).
-check_directions_for_n(Board, Symbol, X, Y, [Dir|Rest], N, Count) :-
-    check_direction_n(Board, Symbol, X, Y, Dir, N, DirectionCount),
-    check_directions_for_n(Board, Symbol, X, Y, Rest, N, RestCount),
-    Count is DirectionCount + RestCount.
-
-% Check a specific direction for consecutive stones.return 1 if found, 0 otherwise.
-check_direction_n(Board, Symbol, X, Y, [Dx, Dy], N, 1) :-
-    count_consecutive_stones(Board, X, Y, Dx, Dy,Symbol, 0, Count),
-    Count >= N.
-check_direction_n(_, _, _, _, _, _, 0).
 
 
 % Determine if there are five consecutive occurrences of a given symbol from a starting cell in any direction.
@@ -88,10 +59,55 @@ check_both_directions_for_five(Board, Symbol, X, Y, [[Dx, Dy] | Rest], Found) :-
     ;   check_both_directions_for_five(Board, Symbol, X, Y, Rest, Found)
     ).
 
+check_four_in_a_row(Board, Symbol, Count) :-
+    check_cell_for_four(Board, Symbol, 0, 0, Count).
+
+check_cell_for_four(_, _, 19, _, 0).
+
+check_cell_for_four(Board, Symbol, X, 19, Count) :-
+    NewX is X + 1,
+    check_cell_for_four(Board, Symbol, NewX, 0, Count).
+
+check_cell_for_four(Board, Symbol, X, Y, Count) :-
+    directions(Directions),
+    check_directions_for_four(Board, Symbol, X, Y, Directions, DirectionCount),
+    NewY is Y + 1,
+    check_cell_for_four(Board, Symbol, X, NewY, NextCount),
+    Count is DirectionCount + NextCount.
+
+% Check all directions for n consecutive stones.
+check_directions_for_four(_, _, _, _, [], 0).
+check_directions_for_four(Board, Symbol, X, Y, [Dir|Rest], Count) :-
+    check_direction_four(Board, Symbol, X, Y, Dir, DirectionCount),
+    check_directions_for_four(Board, Symbol, X, Y, Rest, RestCount),
+    Count is DirectionCount + RestCount.
+
+
+% Check a specific direction for exactly four consecutive stones, return 1 if found, 0 otherwise.
+check_direction_four(Board, Symbol, X, Y, [Dx, Dy], 1) :-
+    count_consecutive_stones(Board, X, Y, Dx, Dy, Symbol, 0, Count),
+    Count == 3,
+    NextX is X + 4 * Dx,
+    NextY is Y + 4 * Dy,
+    PrevX is X - Dx,
+    PrevY is Y - Dy,
+    not_symbol_at(Board, NextX, NextY, Symbol),
+    not_symbol_at(Board, PrevX, PrevY, Symbol).
+
+check_direction_four(_, _, _, _, _, 0).
+
+% Check if a  symbol is not at a given cell
+not_symbol_at(Board, X, Y, Symbol) :-
+    (   \+ is_within_bounds(X, Y)
+    ;   is_within_bounds(X, Y),
+        get_cell(Board, X, Y, Cell),
+        Cell \= Symbol
+    ).
+
 
 % Count occurrences of four consecutive symbols on the board.
 count_four_in_a_row(Board, Symbol, Count) :-
-    check_for_n_in_a_row(Board, Symbol, 4, Count).
+    check_four_in_a_row(Board, Symbol, Count).
 
 is_capture_possible(Board, [X, Y], Dx, Dy, Symbol) :-
     get_opponent_symbol(Symbol, OpponentSymbol),
