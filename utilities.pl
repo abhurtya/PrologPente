@@ -160,15 +160,14 @@ check_directions_capture(Board, Symbol, [X, Y], [[Dx, Dy] | Rest], UpdatedBoard,
 % ==================================================================================================
 % FOR STRATEGY TO PROIORITIZE MOVE WITH MORE CAPTURES
 % % Count the total number of possible captures from a given position.
-% count_captures(Board, X, Y, Symbol, Count) :-
-%     directions(Directions),
-%     count_captures_directions(Board, X, Y, Symbol, Directions, Count).
+count_captures(Board, X, Y, Symbol, Count) :-
+    capture_directions(Directions),
+    count_captures_directions(Board, X, Y, Symbol, Directions, 0, Count).
 
-% count_captures_directions(_, _, _, _, [], 0).
-% count_captures_directions(Board, X, Y, Symbol, [Direction|Rest], Count) :-
-%     Direction = [Dx, Dy],
-%     is_capture_possible(Board, X, Y, Dx, Dy, Symbol, Possible),
-%     count_captures_directions(Board, X, Y, Symbol, Rest, RestCount),
-%     (   Possible -> Count is RestCount + 1
-%     ;   Count = RestCount
-%     ).
+count_captures_directions(_, _, _, _, [], Count, Count).
+count_captures_directions(Board, X, Y, Symbol, [[Dx, Dy]|Rest],AccumulatedCount, Count) :-
+    (   is_capture_possible(Board, [X, Y], Dx, Dy, Symbol) ->
+        NewCount is AccumulatedCount + 1
+    ;   NewCount is AccumulatedCount
+    ),
+    count_captures_directions(Board, X, Y, Symbol, Rest, NewCount, Count).

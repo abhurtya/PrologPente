@@ -108,3 +108,29 @@ block_five_row_strategy(Board, Symbol, Move) :-
     get_opponent_symbol(Symbol, OpponentSymbol),
     find_five_row_move(Board, OpponentSymbol, 0, 0, Move).
 
+check_capture_strategy(Board, Symbol, BestMove) :-
+    check_capture(Board, Symbol, 0, 0, [], 0, BestMove).
+
+%ending board
+check_capture(_, _, 18, 18, BestMove, _, BestMove).
+
+% ending row
+check_capture(Board, Symbol, 18, Y, CurrentBestMove, MaxCapture, BestMove) :-
+    NewY is Y + 1,
+    check_capture(Board, Symbol, 0, NewY, CurrentBestMove, MaxCapture, BestMove).
+
+% Check current cell for potential captures
+check_capture(Board, Symbol, X, Y, CurrentBestMove, MaxCapture, BestMove) :-
+    NewX is X + 1,
+    (
+        get_cell(Board, X, Y, '.'),
+        count_captures(Board, X, Y, Symbol, CaptureCount),
+        (
+            CaptureCount > MaxCapture ->
+            check_capture(Board, Symbol, NewX, Y, [X, Y], CaptureCount, BestMove)
+        ;
+            check_capture(Board, Symbol, NewX, Y, CurrentBestMove, MaxCapture, BestMove)
+        )
+    ;
+        check_capture(Board, Symbol, NewX, Y, CurrentBestMove, MaxCapture, BestMove)
+    ).

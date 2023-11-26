@@ -61,6 +61,7 @@ new_tournament :-
 
 % Function to manage and facilitate the rounds of a tournament
 tournament_helper(Board, StartingPlayer, StartingSymbol, HumanPoints, ComputerPoints, HumanCaptures, ComputerCaptures) :-
+    print_board(Board),
     play_round(Board, StartingPlayer, StartingSymbol, HumanCaptures, ComputerCaptures, RoundPoints),
     nth0(0, RoundPoints, HumanRoundPoints),
     nth0(1, RoundPoints, ComputerRoundPoints),
