@@ -92,9 +92,18 @@ is_valid_move(Board, X, Y, Symbol) :-
     ;   true % If none of the above, the move is valid
     ).
 
+% Check if cell is empty
+is_cell_empty(Board, X, Y) :-
+    get_cell(Board, X, Y, Cell),
+    Cell == '.'.
 
-
-
+% get the next cell in baord
+next_cell(18, 18, 19, 0). 
+next_cell(X, 18, NextX, 0) :-  
+    NextX is X + 1.
+next_cell(X, Y, X, NextY) :-
+    Y < 18,
+    NextY is Y + 1.
 
 % ==================================================================================================
 
