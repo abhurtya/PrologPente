@@ -149,7 +149,9 @@ check_for_capture(Board, Symbol, [X, Y], UpdatedBoard, TotalCaptures) :-
     check_directions_capture(Board, Symbol, [X, Y], Directions, UpdatedBoard, TotalCaptures).
 
 % Check multiple directions for possible captures and carry them out.
-check_directions_capture(Board, Symbol, [X, Y], [], Board, 0).
+% check_directions_capture(Board, Symbol, [X, Y], [], Board, 0).
+check_directions_capture(Board, _, [_, _], [], Board, 0).
+
 check_directions_capture(Board, Symbol, [X, Y], [[Dx, Dy] | Rest], UpdatedBoard, TotalCaptures) :-
     capture_stones(Board, [X, Y], Dx, Dy, Symbol, NewBoard, Captures),
     check_directions_capture(NewBoard, Symbol, [X, Y], Rest, MoreUpdatedBoard, MoreCaptures),

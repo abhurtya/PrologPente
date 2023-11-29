@@ -163,30 +163,27 @@ count_consecutive_stones(Board, X, Y, Dx, Dy, Symbol, Depth, Count) :-
 
 
 % % To convert the entire board either from file format to display format or vice-versa
-% convert_board([], _, []) :- !.
-% convert_board([Row|Rest], ConvertType, [ConvertedRow|ConvertedBoard]) :-
-%     convert_row(Row, ConvertType, ConvertedRow),
-%     convert_board(Rest, ConvertType, ConvertedBoard).
+convert_board([], _, []).
+convert_board([Row|Rest], ConvertType, [ConvertedRow|ConvertedBoard]) :-
+    convert_row(Row, ConvertType, ConvertedRow),
+    convert_board(Rest, ConvertType, ConvertedBoard).
 
 % % To convert a single row either from file format to display format or vice-versa
-% convert_row([], _, []) :- !.
-% convert_row([Cell|Rest], ConvertType, [ConvertedCell|ConvertedRow]) :-
-%     convert_cell(Cell, ConvertType, ConvertedCell),
-%     convert_row(Rest, ConvertType, ConvertedRow).
+convert_row([], _, []).
+convert_row([Cell|Rest], ConvertType, [ConvertedCell|ConvertedRow]) :-
+    convert_cell(ConvertType, Cell,  ConvertedCell),
+    convert_row(Rest, ConvertType, ConvertedRow).
 
-% % To convert an individual cell either from file format to display format or vice-versa
-% convert_cell(Cell, from_file, ConvertedCell) :-
-%     (   Cell = 'O', ConvertedCell = '.'
-%     ;   Cell = 'W', ConvertedCell = 'W'
-%     ;   Cell = 'B', ConvertedCell = 'B'
-%     ;   ConvertedCell = Cell
-%     ).
-% convert_cell(Cell, to_file, ConvertedCell) :-
-%     (   Cell = '.', ConvertedCell = 'O'
-%     ;   Cell = 'W', ConvertedCell = 'W'
-%     ;   Cell = 'B', ConvertedCell = 'B'
-%     ;   ConvertedCell = Cell
-%     ).
+
+convert_cell(save, 'B', 'b').
+convert_cell(save, 'W', 'w').
+convert_cell(save, _, 'o').
+
+convert_cell(load, 'b', 'B').
+convert_cell(load, 'w', 'W').
+convert_cell(load, _, '.').
+
+
 
 
 
