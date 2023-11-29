@@ -59,14 +59,37 @@ new_tournament :-
     format("Starting player: ~w\n", [StartingPlayer]),
     tournament_helper(Board, StartingPlayer, 'W', 0, 0, 0, 0).
 
+load_tournament :-
+    writeln("Enter the name of the file to load: "),
+    clear_input_buffer,
+    read_line_to_string(user_input, FileName),
+    string_concat('test_cases/', FileName, FullPath), % i have it in a folder called test_cases
+    open(FullPath, read, Stream),
+    read(Stream, FileData),
+    close(Stream),
+    (   FileData == end_of_file ->  writeln('Failed to read the file.')
+    ;   process_file_data(FileData)
+    ).
+
+process_file_data([BoardData, HumanCaptures, HumanScore, ComputerCaptures, ComputerScore, StartingPlayer, StartingSymbol]) :-
+    convert_board(BoardData, load, Board),
+    get_short_symbol(StartingSymbol, ConvertedSymbol),
+    format("\n🎪🎪🎪🎪 Resuming from file now 🎪🎪🎪🎪\n\n"),
+    format("Human Score: ~w, Computer Score: ~w\n", [HumanScore, ComputerScore]),
+    format("Next Player: ~w, Next Player Symbol: ~w (~w)\n", [StartingPlayer, StartingSymbol, ConvertedSymbol]),
+    format("Human Captures: ~w, Computer Captures: ~w\n", [HumanCaptures, ComputerCaptures]),
+    sleep(5),
+    tournament_helper(Board, StartingPlayer, ConvertedSymbol, HumanScore, ComputerScore, HumanCaptures, ComputerCaptures).
+
 % Function to manage and facilitate the rounds of a tournament
 tournament_helper(Board, StartingPlayer, StartingSymbol, HumanPoints, ComputerPoints, HumanCaptures, ComputerCaptures) :-
     print_board(Board),
     play_round(Board, StartingPlayer, StartingSymbol, HumanCaptures, ComputerCaptures, [HumanRoundPoints, ComputerRoundPoints]),
-    format("Human Round Points: ~w, Computer Round Points: ~w\n\n", [HumanRoundPoints, ComputerRoundPoints]),
+    format("This Round Stats: \n \tHuman  Points: ~w, \t Computer Points: ~w\n\n", [HumanRoundPoints, ComputerRoundPoints]),
+    format("Previous Round Stats: \n \tHuman  Points: ~w, \t Computer Points: ~w\n\n", [HumanPoints, ComputerPoints]),
     NewHumanPoints is HumanPoints + HumanRoundPoints,
     NewComputerPoints is ComputerPoints + ComputerRoundPoints,
-    format("Human Points: ~w, Computer Points: ~w\n", [NewHumanPoints, NewComputerPoints]),
+    format("Overall Tournament Stats: \n \tHuman Points: ~w, \t Computer Points: ~w\n\n", [NewHumanPoints, NewComputerPoints]),
     ask_user_play(Continue),
     (
         Continue ->

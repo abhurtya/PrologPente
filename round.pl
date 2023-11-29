@@ -6,38 +6,35 @@
 :- consult('strategy.pl').
 :- consult('utilities.pl').
 
+play_round(Board, CurrentPlayer, Symbol, HumanCaptures, ComputerCaptures, Scores) :-
 
-    play_round(Board, CurrentPlayer, Symbol, HumanCaptures, ComputerCaptures, Scores) :-
-
-        make_move(CurrentPlayer, Board,  Symbol, NewBoard, LastMove),
-        check_for_capture(NewBoard, Symbol, LastMove, NewBoardWithCaptures, NumCaptures),
-        update_captures(CurrentPlayer, HumanCaptures, ComputerCaptures, NumCaptures, NewHumanCaptures, NewComputerCaptures),
-        print_board(NewBoardWithCaptures),
-        print_captures(NewHumanCaptures, NewComputerCaptures),
-        
-        (   check_win(NewBoardWithCaptures, LastMove, Symbol, NumCaptures) ->
-            % win condition
-            determine_winner_type(NewBoardWithCaptures, LastMove, Symbol, NumCaptures, WinnerType), 
-            format("~w wins this round! Reason code: ~w\n", [CurrentPlayer, WinnerType]),
-            count_four_in_a_row_points(NewBoardWithCaptures, CurrentPlayer, Symbol, FourInARowPoints),
-            count_total_points(WinnerType, CurrentPlayer, NewHumanCaptures, NewComputerCaptures, FourInARowPoints, Scores)
-        ; %no winner condition
-            ask_user_continue(Choice),
-            (   Choice == continue ->
-                get_opponent_player(CurrentPlayer, NextPlayer),
-                get_opponent_symbol(Symbol, NextSymbol),
-                play_round(NewBoardWithCaptures, NextPlayer, NextSymbol, NewHumanCaptures, NewComputerCaptures, Scores)
-            ;   Choice == save ->
-                save_game_to_file(NewBoardWithCaptures, NewHumanCaptures, 0,NewComputerCaptures, 0,CurrentPlayer, Symbol),
-                Scores = [HumanCaptures, ComputerCaptures]
-            ;   Choice == quit ->
-                writeln('Game ended without saving.'),
-                Scores = [HumanCaptures, ComputerCaptures]
-            )
-        ).
+    make_move(CurrentPlayer, Board,  Symbol, NewBoard, LastMove),
+    check_for_capture(NewBoard, Symbol, LastMove, NewBoardWithCaptures, NumCaptures),
+    update_captures(CurrentPlayer, HumanCaptures, ComputerCaptures, NumCaptures, NewHumanCaptures, NewComputerCaptures),
+    print_board(NewBoardWithCaptures),
+    print_captures(NewHumanCaptures, NewComputerCaptures),
     
-
-
+    (   check_win(NewBoardWithCaptures, LastMove, Symbol, NumCaptures) ->
+        % win condition
+        determine_winner_type(NewBoardWithCaptures, LastMove, Symbol, NumCaptures, WinnerType), 
+        format("\n🏆🏆🏆🏆🏆 ~w wins this round!🏆🏆🏆🏆🏆 Reason: ~w\n", [CurrentPlayer, WinnerType]),
+        count_four_in_a_row_points(NewBoardWithCaptures, CurrentPlayer, Symbol, FourInARowPoints),
+        count_total_points(WinnerType, CurrentPlayer, NewHumanCaptures, NewComputerCaptures, FourInARowPoints, Scores)
+    ; %no winner condition
+        ask_user_continue(Choice),
+        (   Choice == continue ->
+            get_opponent_player(CurrentPlayer, NextPlayer),
+            get_opponent_symbol(Symbol, NextSymbol),
+            play_round(NewBoardWithCaptures, NextPlayer, NextSymbol, NewHumanCaptures, NewComputerCaptures, Scores)
+        ;   Choice == save ->
+            save_game_to_file(NewBoardWithCaptures, NewHumanCaptures, 0,NewComputerCaptures, 0,CurrentPlayer, Symbol),
+            Scores = [HumanCaptures, ComputerCaptures]
+        ;   Choice == quit ->
+            writeln('Game ended without saving.'),
+            Scores = [HumanCaptures, ComputerCaptures]
+        )
+    ).
+    
 make_move(human,Board,  Symbol, NewBoard, LastMove) :-
     human_play(Board, Symbol, NewBoard, LastMove).
 
@@ -51,7 +48,7 @@ update_captures(computer, HumanCaptures, ComputerCaptures, NumCaptures, HumanCap
     NewComputerCaptures is ComputerCaptures + NumCaptures.
 
 print_captures(HumanCaptures, ComputerCaptures) :-
-    format('Human Captures: ~d\tComputer Captures: ~d~n', [HumanCaptures, ComputerCaptures]).
+    format('Human 👨 Captures: ~d\tComputer 🤖 Captures: ~d~n', [HumanCaptures, ComputerCaptures]).
     
 % Determines if the current player has won
 check_win(Board, LastMove, Symbol, NumCaptures) :-
@@ -81,19 +78,23 @@ count_four_in_a_row_points(_, _, _, [0, 0]). % Default case
 
 count_total_points(WinType, CurrentPlayer, HumanCaptures, ComputerCaptures, [FourInARowHuman, FourInARowComputer], [HumanPoints, ComputerPoints]) :-
     win_bonus(WinType, WinBonus),
-    calculate_player_points(CurrentPlayer, WinBonus, HumanCaptures, ComputerCaptures, FourInARowHuman, FourInARowComputer, HumanPoints, ComputerPoints),
-    format('In count total points , ---------Human Points: ~d\tComputer Points: ~d~n', [HumanPoints, ComputerPoints]).
+    calculate_player_points(CurrentPlayer, WinBonus, HumanCaptures, ComputerCaptures, FourInARowHuman, FourInARowComputer, HumanPoints, ComputerPoints).
 
 win_bonus(row5, 5).
 win_bonus(_, 0).
 
 calculate_player_points(human, WinBonus, HumanCaptures, ComputerCaptures, FourInARowHuman, FourInARowComputer, HumanPoints, ComputerPoints) :-
     HumanPoints is HumanCaptures + WinBonus + FourInARowHuman,
-    ComputerPoints is ComputerCaptures + FourInARowComputer.
+    ComputerPoints is ComputerCaptures + FourInARowComputer,
+    format('Human ➡️ ~d capture points, ~d four in a row points, ~d win bonus~n', [HumanCaptures, FourInARowHuman, WinBonus]),
+    format('Computer ➡️ ~d capture points, ~d four in a row points~n', [ComputerCaptures, FourInARowComputer]).
+
 
 calculate_player_points(computer, WinBonus, HumanCaptures, ComputerCaptures, FourInARowHuman, FourInARowComputer, HumanPoints, ComputerPoints) :-
     HumanPoints is HumanCaptures + FourInARowHuman,
-    ComputerPoints is ComputerCaptures + WinBonus + FourInARowComputer.
+    ComputerPoints is ComputerCaptures + WinBonus + FourInARowComputer,
+    format('Human ➡️ ~d capture points, ~d four in a row points~n', [HumanCaptures, FourInARowHuman]),
+    format('Computer ➡️ ~d capture points, ~d four in a row points, ~d win bonus~n', [ComputerCaptures, FourInARowComputer, WinBonus]).
 
 % save_game_to_file - Saves the current game state to a file
 
@@ -125,12 +126,14 @@ write_rows(Stream, [Row|Rest]) :-
 
 get_long_symbol('W', 'white').
 get_long_symbol('B', 'black').
+get_short_symbol('white', 'W').
+get_short_symbol('black', 'B').
 
 
 ask_user_continue(Choice) :-
     writeln('Press [Q] to quit without saving, [S] to save and quit, or any other key to continue: '),
-    % read_line_to_string(user_input, Input),
-    Input = "*",
+    read_line_to_string(user_input, Input),
+    % Input = "*",
     (   Input == "Q" -> Choice = quit
     ;   Input == "S" -> Choice = save
     ;   Choice = continue
